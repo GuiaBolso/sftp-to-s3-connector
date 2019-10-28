@@ -1,5 +1,8 @@
 # SFTP to S3 Connector
 
+[![Build Status](https://img.shields.io/travis/GuiaBolso/sftp-to-s3-connector)](https://travis-ci.org/GuiaBolso/sftp-to-s3-connector)
+[![GitHub](https://img.shields.io/github/license/GuiaBolso/sftp-to-s3-connector)](https://github.com/GuiaBolso/sftp-to-s3-connector/blob/master/LICENSE)
+[![Bintray Download](https://img.shields.io/bintray/v/gb-opensource/maven/SFTP-to-S3-Connector)](https://bintray.com/gb-opensource/maven/SFTP-to-S3-Connector)
 
 ## Introduction
 When processing large amounts of data and integrating with external partners it's common to use files instead of APIs, and thus the Secure File Transfer Protocol (SFTP) to transfer these files. When building enterprise applications that depend upon this data, it's common to first transfer the files to your own infrastructure and then processing it.
