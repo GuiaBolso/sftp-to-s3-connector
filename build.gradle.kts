@@ -25,7 +25,7 @@ plugins {
 apply(plugin = "com.novoda.bintray-release")
 
 group = "br.com.guiabolso"
-version = "0.1.1"
+version = "0.1.2"
 
 repositories {
     mavenCentral()
@@ -43,7 +43,7 @@ dependencies {
     testImplementation("com.github.stefanbirkner:fake-sftp-server-lambda:1.0.0")
     
     // S3
-    implementation("com.amazonaws:aws-java-sdk-s3:1.11.488")
+    api("com.amazonaws:aws-java-sdk-s3:1.11.488")
     testImplementation("com.adobe.testing:s3mock-junit5:2.1.16")
     
     // KotlinTest
