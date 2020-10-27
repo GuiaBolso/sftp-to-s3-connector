@@ -19,61 +19,52 @@ package br.com.guiabolso.sftptos3connector.internal.s3
 import br.com.guiabolso.sftptos3connector.internal.sftp.SftpFile
 import com.adobe.testing.s3mock.junit5.S3MockExtension
 import com.amazonaws.services.s3.AmazonS3
-import io.kotlintest.Spec
-import io.kotlintest.shouldBe
-import io.kotlintest.specs.BehaviorSpec
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.shouldBe
 import java.io.ByteArrayInputStream
 import java.io.InputStream
+import java.io.OutputStream
 
-class S3FileSenderTest : BehaviorSpec() {
-    
-    private val kmsKey = "AWS::KMS::Key"
-    
-    private val s3MockExtension = S3MockExtension.builder().silent().withSecureConnection(true).build()
-    
-    init {
-        Given("A file stream with content") {
-            val content = "abc".toByteArray(Charsets.UTF_8)
-            val stream: InputStream = ByteArrayInputStream(content)
-            val sftpFile = SftpFile(stream, content.size.toLong())
-            val filename = "abc.file"
-        
-            When("The S3FileSender is called to send it without a KMS key") {
-                val client = s3MockExtension.createS3Client().withBucket("bucket")
-                val target = S3FileSender(client)
-                target.send("bucket", sftpFile, filename)
+class S3FileSenderTest : BehaviorSpec({
 
-                Then("The file should be sent") {
-                    val sentFile = client.getObject("bucket", filename)
-                    sentFile.objectContent.readBytes() shouldBe content
-                }
+    val kmsKey = "AWS::KMS::Key"
+    val s3Mock = S3MockExtension.builder().silent().withSecureConnection(true).build()
+
+    Given("A file stream with content") {
+        val content = "abc".toByteArray(Charsets.UTF_8)
+        val stream: InputStream = ByteArrayInputStream(content)
+        val sftpFile = SftpFile(stream, content.size.toLong())
+        val filename = "abc.file"
+
+        When("The S3FileSender is called to send it without a KMS key") {
+            val client = s3Mock.createS3Client().withBucket("bucket")
+            val target = S3FileSender(client)
+            target.send("bucket", sftpFile, filename, simpleCopyTransformer)
+
+            Then("The file should be sent") {
+                val sentFile = client.getObject("bucket", filename)
+                sentFile.objectContent.readBytes() shouldBe content
             }
-            
-            When("The S3FileSender is called to send it with a KMS key") {
-                s3MockExtension.registerKMSKeyRef(kmsKey)
-                val client = s3MockExtension.createS3Client().withBucket("bucket")
-                val target = S3FileSender(client)
-                target.send("bucket", sftpFile, filename, kmsKey)
-                
-                Then("The file should be sent with the kms key") {
-                    val sentFileMetadata = client.getObjectMetadata("bucket", filename)
-                    sentFileMetadata.sseAwsKmsKeyId shouldBe kmsKey
-                }
+        }
+
+        When("The S3FileSender is called to send it with a KMS key") {
+            s3Mock.registerKMSKeyRef(kmsKey)
+            val client = s3Mock.createS3Client().withBucket("bucket")
+            val target = S3FileSender(client)
+            target.send("bucket", sftpFile, filename, simpleCopyTransformer, kmsKey)
+
+            Then("The file should be sent with the kms key") {
+                val sentFileMetadata = client.getObjectMetadata("bucket", filename)
+                sentFileMetadata.sseAwsKmsKeyId shouldBe kmsKey
             }
         }
     }
-        
-        private fun AmazonS3.withBucket(bucket: String) = apply {
-            createBucket(bucket)
-        }
-        
     
-    override fun beforeSpec(spec: Spec) {
-        s3MockExtension.beforeAll(null)
-    }
-    
-    override fun afterSpec(spec: Spec) {
-        s3MockExtension.afterAll(null)
-    }
-    
-}
+    beforeSpec { s3Mock.beforeAll(null) }
+    afterSpec { s3Mock.afterAll(null) }
+
+})
+
+private fun AmazonS3.withBucket(bucket: String) = apply { createBucket(bucket) }
+
+private val simpleCopyTransformer: (InputStream, OutputStream) -> Unit = { i, o -> i.copyTo(o) }

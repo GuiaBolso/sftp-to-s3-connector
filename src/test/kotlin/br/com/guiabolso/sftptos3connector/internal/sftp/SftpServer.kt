@@ -22,7 +22,7 @@ import java.net.ServerSocket
 val sftpUsername = "username"
 val sftpPassword = "password"
 val sftpFilePath = "path/to/file"
-val sftpFileContent = "FileContent"
+val sftpFileContent = "FileContent\nMoreContent"
 
 
 fun withConfiguredSftpServer(block: (FakeSftpServer) -> Unit) = FakeSftpServer.withSftpServer { server ->

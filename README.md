@@ -50,7 +50,12 @@ connector.transfer(sftpFilePath = "sftp/file/path", s3File = "foo/MyFile.txt")
 
 You can optionally pass a KMS Key ID to request a server-side encryption with it
 ```kotlin
-connector.transfer("sft/file/path", "foo/MyFile.txt", kmsKeyId = "aws:kms:mykeyid")
+connector.transfer("sftp/file/path", "foo/MyFile.txt", kmsKeyId = "aws:kms:mykeyid")
+```
+
+You can optionally pass a Stream Transformer to process the file while it's being streamed. This can be useful for filters or event notifications of some sort.
+```kotlin
+connector.transfer("sftp/file/path", "foo/MyFile.txt", transformer = { inputStream, outputStream -> inputStream.copyTo(outputStream) })
 ```
 
 ## Features
@@ -58,6 +63,7 @@ connector.transfer("sft/file/path", "foo/MyFile.txt", kmsKeyId = "aws:kms:mykeyi
 - The file will be streamed from one point to the other, therefore there won't be any problems regarding file size in-memory. Although unmeasured, the memory footprint of this library should be small
 - As per S3 specification, if there is any errors (such as an interrupted connection) during the transfer, no file chunks will be persisted
 - The files can be encrypted if provided with a KMS key ID
+- It's possible to process the file (as an InputStream) while it's being streamed to S3
 
 ## Limitations
 - Currently this library doesn't have a way to select which files you want transferred other than by specific path and name.

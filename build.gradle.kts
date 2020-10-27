@@ -1,5 +1,4 @@
 import com.novoda.gradle.release.PublishExtension
-import io.gitlab.arturbosch.detekt.detekt
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -16,16 +15,15 @@ buildscript {
 
 
 plugins {
-    kotlin("jvm") version "1.3.50"
+    kotlin("jvm") version "1.4.10"
     `maven-publish`
     id("org.jetbrains.dokka") version "0.9.17"
-    id("io.gitlab.arturbosch.detekt").version("1.1.1")
+    id("io.gitlab.arturbosch.detekt").version("1.14.2")
 }
 
 apply(plugin = "com.novoda.bintray-release")
 
 group = "br.com.guiabolso"
-version = "0.1.2"
 
 repositories {
     mavenCentral()
@@ -33,25 +31,27 @@ repositories {
 }
 
 dependencies {
-    // Kotlin
-    implementation(kotlin("stdlib-jdk8"))
-    
     // SFTP
     implementation("com.jcraft:jsch:0.1.55")
     implementation("org.apache.commons:commons-vfs2:2.4.1")
     
     testImplementation("com.github.stefanbirkner:fake-sftp-server-lambda:1.0.0")
+    testImplementation("org.apache.sshd:sshd-sftp:2.4.0")
     
     // S3
     api("com.amazonaws:aws-java-sdk-s3:1.11.488")
     testImplementation("com.adobe.testing:s3mock-junit5:2.1.16")
     
-    // KotlinTest
-    testImplementation("io.kotlintest:kotlintest-runner-junit5:3.4.2")
+    // Kotest
+    testImplementation("io.kotest:kotest-runner-junit5:4.3.0")
 }
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+kotlin {
+    explicitApi()
 }
 
 tasks.withType<KotlinCompile> {
@@ -70,11 +70,6 @@ val javadocJar by tasks.registering(Jar::class) {
     dependsOn(javadoc)
     classifier = "javadoc"
     from(javadoc.outputDirectory)
-}
-
-detekt {
-    toolVersion = "1.1.1"
-    input = files("src/main/kotlin", "src/test/kotlin")
 }
 
 publishing {
@@ -115,7 +110,7 @@ configure<PublishExtension> {
     groupId = "br.com.guiabolso"
     userOrg = "gb-opensource"
     setLicences("APACHE-2.0")
-    publishVersion = version.toString()
+    publishVersion = System.getenv("RELEASE_VERSION") ?: "local"
     uploadName = "SFTP-to-S3-Connector"
     website = "https://github.com/GuiaBolso/sftp-to-s3-connector"
     setPublications("maven")

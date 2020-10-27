@@ -18,9 +18,8 @@ package br.com.guiabolso.sftptos3connector.internal.s3
 
 import br.com.guiabolso.sftptos3connector.internal.sftp.SftpFile
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.ObjectMetadata
-import com.amazonaws.services.s3.model.PutObjectRequest
-import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams
+import java.io.InputStream
+import java.io.OutputStream
 
 internal class S3FileSender(
     private val s3Client: AmazonS3
@@ -30,31 +29,41 @@ internal class S3FileSender(
         bucket: String,
         sftpFile: SftpFile,
         filename: String,
+        transformer: (InputStream, OutputStream) -> Unit,
         kmsKeyId: String? = null
     ) {
         if(kmsKeyId == null) {
-            putObjectUnencrypted(bucket, sftpFile, filename)
+            streamObjectUnencrypted(bucket, sftpFile, filename, transformer)
         } else {
-            putObjectEncrypted(bucket, sftpFile, filename, kmsKeyId)
+            streamObjectEncrypted(bucket, sftpFile, filename, transformer, kmsKeyId)
         }
         
     }
     
-    private fun putObjectUnencrypted(bucket: String, sftpFile: SftpFile, filename: String) {
-        s3Client.putObject(bucket, filename, sftpFile.stream, objectMetadata(sftpFile.contentLength))
+    private fun streamObjectUnencrypted(
+        bucket: String,
+        sftpFile: SftpFile,
+        filename: String,
+        transformer: (InputStream, OutputStream) -> Unit
+    ) {
+        sftpFile.stream.use { sftpStream ->
+            S3OutputStream(s3Client, bucket, filename).use { s3Stream ->
+                transformer(sftpStream, s3Stream)
+            }   
+        }
     }
     
-    private fun putObjectEncrypted(bucket: String, sftpFile: SftpFile, filename: String, kmsKey: String) {
-        s3Client.putObject(
-            PutObjectRequest(bucket,
-                             filename,
-                             sftpFile.stream,
-                             objectMetadata(sftpFile.contentLength).withKmsEncryption()
-            ).withSSEAwsKeyManagementParams(SSEAwsKeyManagementParams(kmsKey))
-        )
+    private fun streamObjectEncrypted(
+        bucket: String,
+        sftpFile: SftpFile,
+        filename: String,
+        transformer: (InputStream, OutputStream) -> Unit,
+        kmsKey: String
+    ) {
+        sftpFile.stream.use { sftpStream ->
+            S3OutputStream(s3Client, bucket, filename, kmsKey).use { s3Stream ->
+                transformer(sftpStream, s3Stream)
+            }
+        }
     }
-    
-    private fun objectMetadata(contentLength: Long) = ObjectMetadata().also { it.contentLength = contentLength }
-    
-    private fun ObjectMetadata.withKmsEncryption() = apply { sseAlgorithm = "aws:kms" }
 }
