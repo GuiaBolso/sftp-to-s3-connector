@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package io.kotlintest.provided
+package br.com.guiabolso.sftptos3connector
 
-import io.kotlintest.AbstractProjectConfig
-import io.kotlintest.IsolationMode
+import io.kotest.core.config.AbstractProjectConfig
+import io.kotest.core.spec.IsolationMode
 
-@Suppress("unused") // KotlinTest uses this object via reflection
+
+@Suppress("unused")
 object ProjectConfig : AbstractProjectConfig() {
-    
-    override fun isolationMode() = IsolationMode.InstancePerTest
+
+    override val isolationMode = IsolationMode.InstancePerTest
 }

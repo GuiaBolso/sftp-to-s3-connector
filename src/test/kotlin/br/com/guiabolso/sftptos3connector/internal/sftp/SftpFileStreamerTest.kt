@@ -17,33 +17,28 @@
 package br.com.guiabolso.sftptos3connector.internal.sftp
 
 import br.com.guiabolso.sftptos3connector.config.SftpConfig
-import io.kotlintest.shouldBe
-import io.kotlintest.specs.FunSpec
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 import java.io.InputStream
 
-@ExperimentalStdlibApi
-class SftpFileStreamerTest : FunSpec() {
-    
-    init {
-        test("Should stream the content from a SFTP server") {
-            withConfiguredSftpServer { server ->
-                val target = SftpFileStreamer( SftpConfig("localhost", server.port, sftpUsername, sftpPassword))
-    
-                val fileStream: InputStream = target.getSftpFile(sftpFilePath).stream
-                
-                fileStream.reader().readText() shouldBe sftpFileContent
-            }
-        }
-        
-        test("Should return the file and it's content length") {
-            withConfiguredSftpServer { server ->
-                val target = SftpFileStreamer( SftpConfig("localhost", server.port, sftpUsername, sftpPassword))
-                
-                val fileInfo = target.getSftpFile(sftpFilePath)
-                
-                fileInfo.contentLength shouldBe sftpFileContent.encodeToByteArray().size.toLong()
-            }
+class SftpFileStreamerTest : FunSpec({
+    test("Should stream the content from a SFTP server") {
+        withConfiguredSftpServer { server ->
+            val target = SftpFileStreamer(SftpConfig("localhost", server.port, sftpUsername, sftpPassword))
+
+            val fileStream: InputStream = target.getSftpFile(sftpFilePath).stream
+
+            fileStream.reader().readText() shouldBe sftpFileContent
         }
     }
 
-}
+    test("Should return the file and it's content length") {
+        withConfiguredSftpServer { server ->
+            val target = SftpFileStreamer(SftpConfig("localhost", server.port, sftpUsername, sftpPassword))
+
+            val fileInfo = target.getSftpFile(sftpFilePath)
+
+            fileInfo.contentLength shouldBe sftpFileContent.encodeToByteArray().size.toLong()
+        }
+    }
+})

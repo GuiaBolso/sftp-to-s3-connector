@@ -20,6 +20,8 @@ import br.com.guiabolso.sftptos3connector.config.S3Config
 import br.com.guiabolso.sftptos3connector.config.SftpConfig
 import br.com.guiabolso.sftptos3connector.internal.s3.S3FileSender
 import br.com.guiabolso.sftptos3connector.internal.sftp.SftpFileStreamer
+import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * Simple connector from a SFTP server to a S3 bucket
@@ -51,10 +53,15 @@ public class SftpToS3Connector(
      * As per S3 specification, if there's a failure during the file transfer, no file chunks are stored at S3, so if
      * no exception is thrown during this execution, it's assumed that the file was transferred correctly.
      */
-    public fun transfer(sftpFilePath: String, s3File: String, kmsKeyId: String? = null): Unit {
+    public fun transfer(
+        sftpFilePath: String,
+        s3File: String,
+        kmsKeyId: String? = null,
+        transformer: (InputStream, OutputStream) -> Unit = SimpleCopyTransformer
+    ): Unit {
         val sftpFile = sftpFileStreamer.getSftpFile(sftpFilePath)
-        s3FileSender.send(s3Config.bucket, sftpFile, s3File, kmsKeyId)
+        s3FileSender.send(s3Config.bucket, sftpFile, s3File, transformer, kmsKeyId)
     }
-    
-    
 }
+
+private val SimpleCopyTransformer: (InputStream, OutputStream) -> Unit = { i, o -> i.copyTo(o) }
