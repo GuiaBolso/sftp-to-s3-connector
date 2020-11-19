@@ -22,7 +22,7 @@ internal class S3OutputStream(
     private val path: String,
     private val kmsKeyId: String? = null
 ) : OutputStream() {
-    
+
     private var open = true
     private val buffer = ByteArray(10 * 1024 * 1024)
     private var position = 0
@@ -33,12 +33,12 @@ internal class S3OutputStream(
 
     override fun write(b: ByteArray, off: Int, len: Int) {
         require(open)
-        
+
         var offset = off
         var length = len
         var size = buffer.size - position
-        
-        while(length > size) {
+
+        while (length > size) {
             System.arraycopy(b, offset, buffer, position, size)
             position += size
             flushBufferAndRewind()
@@ -49,9 +49,9 @@ internal class S3OutputStream(
         System.arraycopy(b, offset, buffer, position, length)
         position += length
     }
-    
+
     private fun flushBufferAndRewind() {
-        if(uploadId == null) {
+        if (uploadId == null) {
             val request = InitiateMultipartUploadRequest(bucket, path)
             val response = s3Client.initiateMultipartUpload(request)
             uploadId = response.uploadId
@@ -59,59 +59,55 @@ internal class S3OutputStream(
         uploadPart()
         position = 0
     }
-    
+
     private fun uploadPart() {
-        val result = s3Client.uploadPart(UploadPartRequest()
-            .withBucketName(bucket)
-            .withKey(path)
-            .withUploadId(uploadId)
-            .withInputStream(ByteArrayInputStream(buffer, 0, position))
-            .withPartNumber(etags.size + 1)
-            .withPartSize(position.toLong())
+        val result = s3Client.uploadPart(
+            UploadPartRequest()
+                .withBucketName(bucket)
+                .withKey(path)
+                .withUploadId(uploadId)
+                .withInputStream(ByteArrayInputStream(buffer, 0, position))
+                .withPartNumber(etags.size + 1)
+                .withPartSize(position.toLong())
         )
         etags += result.partETag
     }
 
     override fun close() {
-        if(!open) return
+        if (!open) return
         open = false
-        
-        if(uploadId == null) {
+
+        if (uploadId == null) {
             val request = createPutObjectRequest()
             s3Client.putObject(request)
         } else {
-            if(position > 0 ) uploadPart()
-            s3Client.completeMultipartUpload(CompleteMultipartUploadRequest(bucket, path, uploadId, etags))
-        }
-        
-        if(uploadId != null) {
-            if(position > 0) {
-                uploadPart()
-            }
+            if (position > 0) uploadPart()
             s3Client.completeMultipartUpload(CompleteMultipartUploadRequest(bucket, path, uploadId, etags))
         }
     }
 
-    override fun flush() { require(open) }
+    override fun flush() {
+        require(open)
+    }
 
     override fun write(b: Int) {
         require(open)
-        if(position >= buffer.size) flushBufferAndRewind()
+        if (position >= buffer.size) flushBufferAndRewind()
         buffer[position++] = b.toByte()
     }
 
     private fun createPutObjectRequest(): PutObjectRequest {
         val metadata = objectMetadata(position.toLong()).withKmsEncryption()
         val req = PutObjectRequest(bucket, path, ByteArrayInputStream(buffer, 0, position), metadata)
-        if(kmsKeyId != null) {
+        if (kmsKeyId != null) {
             req.withSSEAwsKeyManagementParams(SSEAwsKeyManagementParams(kmsKeyId))
         }
         return req
     }
-    
+
     private fun objectMetadata(contentLength: Long) = ObjectMetadata().also { it.contentLength = contentLength }
 
-    private fun ObjectMetadata.withKmsEncryption() = apply { 
-        if(kmsKeyId != null) sseAlgorithm = "aws:kms"
+    private fun ObjectMetadata.withKmsEncryption() = apply {
+        if (kmsKeyId != null) sseAlgorithm = "aws:kms"
     }
 }
