@@ -25,10 +25,13 @@ val sftpFilePath = "path/to/file"
 val sftpFileContent = "FileContent\nMoreContent"
 
 
-fun withConfiguredSftpServer(block: (FakeSftpServer) -> Unit) = FakeSftpServer.withSftpServer { server ->
+fun withConfiguredSftpServer(
+    password: String = sftpPassword,
+    block: (FakeSftpServer) -> Unit
+) = FakeSftpServer.withSftpServer { server ->
     server.port = obtainRandomAvailablePort()
     server.putFile(sftpFilePath, sftpFileContent, Charsets.UTF_8)
-    server.addUser(sftpUsername, sftpPassword)
+    server.addUser(sftpUsername, password)
     block(server)
 }
 

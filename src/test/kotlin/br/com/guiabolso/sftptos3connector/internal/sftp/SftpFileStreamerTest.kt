@@ -41,4 +41,12 @@ class SftpFileStreamerTest : FunSpec({
             fileInfo.contentLength shouldBe sftpFileContent.encodeToByteArray().size.toLong()
         }
     }
+
+    test("Escape uri characters") {
+        withConfiguredSftpServer("unsafe%%,,..&") { server ->
+            val target = SftpFileStreamer(SftpConfig("localhost", server.port, sftpUsername, "unsafe%%,,..&"))
+
+            target.getSftpFile(sftpFilePath)
+        }
+    }
 })
