@@ -18,15 +18,16 @@ package br.com.guiabolso.sftptos3connector.internal.sftp
 
 import br.com.guiabolso.sftptos3connector.config.SftpConfig
 import org.apache.commons.vfs2.VFS
+import java.net.URI
 
 internal class SftpFileStreamer(sftpConfig: SftpConfig) {
-    private val baseConnectionURI = sftpConfig.run { "sftp://$username:$password@$host:$port" }
+    private val baseConnectionURI = sftpConfig.run { URI("sftp", "$username:$password", host, port, null, null, null) }
     private val fileSystemManager = VFS.getManager()
-    
+
     fun getSftpFile(filePath: String): SftpFile {
         return getInputStreamWithContentLength(filePath)
     }
-    
+
     private fun getInputStreamWithContentLength(filePath: String): SftpFile {
         val remoteFile = fileSystemManager.resolveFile("$baseConnectionURI/$filePath")
         return SftpFile(remoteFile.content.inputStream, remoteFile.content.size)
