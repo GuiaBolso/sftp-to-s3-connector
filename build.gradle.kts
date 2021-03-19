@@ -4,7 +4,7 @@ import java.lang.System.getenv
 plugins {
     kotlin("jvm") version "1.4.20"
     `maven-publish`
-    id("org.jetbrains.dokka") version "1.4.20"
+    id("org.jetbrains.dokka") version "1.4.30"
     id("io.gitlab.arturbosch.detekt").version("1.14.2")
 }
 
