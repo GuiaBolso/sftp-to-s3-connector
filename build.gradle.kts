@@ -1,34 +1,19 @@
-import com.novoda.gradle.release.PublishExtension
-import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
-buildscript {
-    repositories {
-        mavenCentral()
-        jcenter()
-    }
-
-    dependencies {
-        classpath("com.novoda:bintray-release:0.9.1")
-    }
-}
-
+import java.lang.System.getenv
 
 plugins {
-    kotlin("jvm") version "1.4.20"
+    kotlin("jvm") version "1.4.31"
     `maven-publish`
-    id("org.jetbrains.dokka") version "1.4.20"
-    id("io.gitlab.arturbosch.detekt").version("1.14.2")
+    signing
+    id("io.gitlab.arturbosch.detekt").version("1.16.0")
 }
 
-apply(plugin = "com.novoda.bintray-release")
-
 group = "br.com.guiabolso"
-version = System.getenv("RELEASE_VERSION") ?: "local"
+version = getenv("RELEASE_VERSION") ?: "local"
 
 repositories {
-    mavenCentral()
     jcenter()
+    mavenCentral()
 }
 
 dependencies {
@@ -56,27 +41,49 @@ kotlin {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions {
+        jvmTarget = "1.8"
+        useIR = true
+    }
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(8))
+    }
 }
 
 val sourcesJar by tasks.registering(Jar::class) {
-    classifier = "sources"
+    archiveClassifier.set("sources")
     from(sourceSets.getByName("main").allSource)
 }
 
-val javadocJar by tasks.registering(Jar::class) {
+val javadoc = tasks.named("javadoc")
+val javadocsJar by tasks.creating(Jar::class) {
+    group = JavaBasePlugin.DOCUMENTATION_GROUP
+    description = "Assembles java doc to jar"
     archiveClassifier.set("javadoc")
-    dependsOn("dokkaJavadoc")
-    from("$buildDir/dokka/javadoc/")
+    from(javadoc)
 }
 
 publishing {
+
+    repositories {
+        maven {
+            url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials {
+                username = getenv("OSSRH_USERNAME")
+                password = getenv("OSSRH_PASSWORD")
+            }
+        }
+    }
+    
     publications {
 
         register("maven", MavenPublication::class) {
             from(components["java"])
+            artifact(javadocsJar)
             artifact(sourcesJar.get())
-            artifact(javadocJar.get())
 
             pom {
                 name.set("SFTP-to-S3-Connector")
@@ -96,20 +103,26 @@ publishing {
                         url.set("https://opensource.org/licenses/Apache-2.0")
                     }
                 }
+
+                developers {
+                    developer {
+                        id.set("Guiabolso")
+                        name.set("Guiabolso")
+                    }
+                }
             }
         }
     }
 }
 
-configure<PublishExtension> {
-    artifactId = "sftp-to-s3-connector"
-    autoPublish = true
-    desc = "SFTP to Amazon S3 connector"
-    groupId = "br.com.guiabolso"
-    userOrg = "gb-opensource"
-    setLicences("APACHE-2.0")
-    publishVersion = System.getenv("RELEASE_VERSION") ?: "local"
-    uploadName = "SFTP-to-S3-Connector"
-    website = "https://github.com/GuiaBolso/sftp-to-s3-connector"
-    setPublications("maven")
+signing {
+    val signingKey: String? by project
+    val signingPassword: String? by project
+
+    useGpgCmd()
+    if (signingKey != null && signingPassword != null) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
+
+    sign((extensions.getByName("publishing") as PublishingExtension).publications)
 }
