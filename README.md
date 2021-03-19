@@ -1,6 +1,6 @@
 # SFTP to S3 Connector
 
-[![Build Status](https://img.shields.io/travis/GuiaBolso/sftp-to-s3-connector)](https://travis-ci.org/GuiaBolso/sftp-to-s3-connector)
+[![Build](https://github.com/GuiaBolso/sftp-to-s3-connector/actions/workflows/build.yml/badge.svg)](https://github.com/GuiaBolso/sftp-to-s3-connector/actions/workflows/build.yml)
 [![GitHub](https://img.shields.io/github/license/GuiaBolso/sftp-to-s3-connector)](https://github.com/GuiaBolso/sftp-to-s3-connector/blob/master/LICENSE)
 ![Maven Central](https://img.shields.io/maven-central/v/br.com.guiabolso/sftp-to-s3-connector)
 
