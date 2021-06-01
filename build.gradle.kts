@@ -22,7 +22,7 @@ dependencies {
     implementation("org.apache.commons:commons-vfs2:2.4.1")
 
     testImplementation("com.github.stefanbirkner:fake-sftp-server-lambda:1.0.0")
-    testImplementation("org.apache.sshd:sshd-sftp:2.4.0")
+    testImplementation("org.apache.sshd:sshd-sftp:2.7.0")
 
     // S3
     api("com.amazonaws:aws-java-sdk-s3:1.11.994")
