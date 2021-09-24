@@ -26,7 +26,7 @@ dependencies {
 
     // S3
     api("com.amazonaws:aws-java-sdk-s3:1.11.994")
-    testImplementation("com.adobe.testing:s3mock-junit5:2.1.16")
+    testImplementation("com.adobe.testing:s3mock-junit5:2.2.2")
 
     // Kotest
     testImplementation("io.kotest:kotest-runner-junit5:4.4.3")
