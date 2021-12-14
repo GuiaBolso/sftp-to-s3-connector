@@ -19,7 +19,7 @@ repositories {
 dependencies {
     // SFTP
     implementation("com.jcraft:jsch:0.1.55")
-    implementation("org.apache.commons:commons-vfs2:2.4.1")
+    implementation("org.apache.commons:commons-vfs2:2.9.0")
 
     testImplementation("com.github.stefanbirkner:fake-sftp-server-lambda:1.0.0")
     testImplementation("org.apache.sshd:sshd-sftp:2.4.0")
