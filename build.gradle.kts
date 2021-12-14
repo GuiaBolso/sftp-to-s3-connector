@@ -25,11 +25,11 @@ dependencies {
     testImplementation("org.apache.sshd:sshd-sftp:2.4.0")
 
     // S3
-    api("com.amazonaws:aws-java-sdk-s3:1.11.994")
+    api("com.amazonaws:aws-java-sdk-s3:1.12.129")
     testImplementation("com.adobe.testing:s3mock-junit5:2.1.16")
 
     // Kotest
-    testImplementation("io.kotest:kotest-runner-junit5:4.4.3")
+    testImplementation("io.kotest:kotest-runner-junit5:5.0.2")
 }
 
 tasks.withType<Test> {
