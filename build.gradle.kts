@@ -29,7 +29,7 @@ dependencies {
     testImplementation("com.adobe.testing:s3mock-junit5:2.1.16")
 
     // Kotest
-    testImplementation("io.kotest:kotest-runner-junit5:4.4.3")
+    testImplementation("io.kotest:kotest-runner-junit5:5.5.4")
 }
 
 tasks.withType<Test> {
